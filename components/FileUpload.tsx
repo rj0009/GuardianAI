@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { UploadCloudIcon } from './icons/UploadCloudIcon';
 import { FileVideoIcon } from './icons/FileVideoIcon';
@@ -80,7 +79,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesSelected, isAnaly
          <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
            <h3 className="font-semibold">Last selection:</h3>
            <ul className="list-disc list-inside">
-             {selectedFileNames.map(name => <li key={name} className="truncate"><FileVideoIcon className="inline w-4 h-4 mr-2" />{name}</li>)}
+             {selectedFileNames.map(name => <li key={name} className="break-words"><FileVideoIcon className="inline w-4 h-4 mr-2" />{name}</li>)}
            </ul>
          </div>
       )}

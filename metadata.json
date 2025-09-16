@@ -1,0 +1,5 @@
+{
+  "name": "Guardian AI: Video Anomaly Detection",
+  "description": "An MVP for a video analysis product that automatically detects and flags instances of violence or anomalous behavior in surveillance footage from early childhood development centers.",
+  "requestFramePermissions": []
+}

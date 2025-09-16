@@ -6,7 +6,8 @@ export interface Anomaly {
 
 export interface AnalysisResult {
   fileName: string;
-  status: 'pending' | 'completed' | 'error';
+  status: 'pending' | 'processing' | 'completed' | 'error';
   anomalies: Anomaly[];
   error?: string;
+  videoUrl?: string;
 }

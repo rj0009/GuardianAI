@@ -6,7 +6,6 @@ import { AnalysisReport } from './components/AnalysisReport';
 import { analyzeVideoFile } from './services/geminiService';
 import { type AnalysisResult, type Anomaly } from './types';
 import { WelcomeSplash } from './components/WelcomeSplash';
-import { YouTubeUrlInput } from './components/YouTubeUrlInput';
 
 const App: React.FC = () => {
   const [analysisResults, setAnalysisResults] = useState<Map<string, AnalysisResult>>(new Map());
@@ -45,22 +44,6 @@ const App: React.FC = () => {
     setAnalysisResults(newResults);
     // Add new files to the existing queue
     setFilesToAnalyze(prevFiles => [...prevFiles, ...filesForAnalysis]);
-  };
-
-  const handleYouTubeUrlSubmit = (url: string) => {
-    if (analysisResults.has(url)) {
-      // Avoid re-analyzing the same URL
-      return;
-    }
-
-    // This feature cannot directly process the video due to browser security limitations.
-    // Instead, we will guide the user to download the video and re-upload it for analysis.
-    // An 'awaiting_upload' status is created for the UI to display instructions.
-    setAnalysisResults(prev => new Map(prev).set(url, {
-      fileName: url,
-      status: 'awaiting_upload',
-      anomalies: [],
-    }));
   };
   
   useEffect(() => {
@@ -124,7 +107,6 @@ const App: React.FC = () => {
       <Header />
       <main className="container mx-auto p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
-          <YouTubeUrlInput onUrlSubmit={handleYouTubeUrlSubmit} isProcessing={isBusy} />
           <FileUpload onFilesSelected={handleFilesSelected} isAnalyzing={isBusy} />
 
           {sortedResults.length > 0 ? (

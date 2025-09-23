@@ -32,17 +32,21 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesSelected, isAnaly
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('video/'));
+    // FIX: Add explicit File type to `file` parameter in filter to resolve 'unknown' type error.
+    const files = Array.from(e.dataTransfer.files).filter((file: File) => file.type.startsWith('video/'));
     if (files.length > 0) {
-      setSelectedFileNames(files.map(f => f.name));
+      // FIX: Add explicit File type to `f` parameter in map to resolve 'unknown' type error.
+      setSelectedFileNames(files.map((f: File) => f.name));
       onFilesSelected(files);
     }
   }, [onFilesSelected]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []).filter(file => file.type.startsWith('video/'));
+    // FIX: Add explicit File type to `file` parameter in filter to resolve 'unknown' type error.
+    const files = Array.from(e.target.files || []).filter((file: File) => file.type.startsWith('video/'));
     if (files.length > 0) {
-      setSelectedFileNames(files.map(f => f.name));
+      // FIX: Add explicit File type to `f` parameter in map to resolve 'unknown' type error.
+      setSelectedFileNames(files.map((f: File) => f.name));
       onFilesSelected(files);
     }
   };

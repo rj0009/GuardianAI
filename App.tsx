@@ -4,8 +4,9 @@ import { Header } from './components/Header';
 import { FileUpload } from './components/FileUpload';
 import { AnalysisReport } from './components/AnalysisReport';
 import { analyzeVideoFile } from './services/geminiService';
-import { type AnalysisResult } from './types';
+import { type AnalysisResult, type Anomaly } from './types';
 import { WelcomeSplash } from './components/WelcomeSplash';
+import { YouTubeUrlInput } from './components/YouTubeUrlInput';
 
 const App: React.FC = () => {
   const [analysisResults, setAnalysisResults] = useState<Map<string, AnalysisResult>>(new Map());
@@ -45,25 +46,35 @@ const App: React.FC = () => {
     // Add new files to the existing queue
     setFilesToAnalyze(prevFiles => [...prevFiles, ...filesForAnalysis]);
   };
+
+  const handleYouTubeUrlSubmit = (url: string) => {
+    if (analysisResults.has(url)) {
+      // Avoid re-analyzing the same URL
+      return;
+    }
+
+    // This feature cannot directly process the video due to browser security limitations.
+    // Instead, we will guide the user to download the video and re-upload it for analysis.
+    // An 'awaiting_upload' status is created for the UI to display instructions.
+    setAnalysisResults(prev => new Map(prev).set(url, {
+      fileName: url,
+      status: 'awaiting_upload',
+      anomalies: [],
+    }));
+  };
   
   useEffect(() => {
     // This effect manages the processing queue.
-    // It runs when the queue (filesToAnalyze) or the processing lock (currentlyProcessing) changes.
-    
-    // If nothing is currently being processed and there are files in the queue...
     if (!currentlyProcessing && filesToAnalyze.length > 0) {
       const fileToProcess = filesToAnalyze[0];
-      
-      // Lock processing to this file.
       setCurrentlyProcessing(fileToProcess.name);
 
       const processFile = async () => {
-        // Set the status to 'processing' for the current file.
         setAnalysisResults(prev => {
           const newResults = new Map(prev);
           const currentResult = newResults.get(fileToProcess.name);
           if (currentResult) {
-            newResults.set(fileToProcess.name, { ...currentResult, status: 'processing' });
+            newResults.set(fileToProcess.name, Object.assign({}, currentResult, { status: 'processing' }));
           }
           return newResults;
         });
@@ -74,11 +85,10 @@ const App: React.FC = () => {
             const newResults = new Map(prev);
             const currentResult = newResults.get(fileToProcess.name);
             if (currentResult) {
-              newResults.set(fileToProcess.name, {
-                ...currentResult,
+              newResults.set(fileToProcess.name, Object.assign({}, currentResult, {
                 status: 'completed',
                 anomalies,
-              });
+              }));
             }
             return newResults;
           });
@@ -88,21 +98,16 @@ const App: React.FC = () => {
             const newResults = new Map(prev);
             const currentResult = newResults.get(fileToProcess.name);
             if (currentResult) {
-              newResults.set(fileToProcess.name, {
-                ...currentResult,
+              newResults.set(fileToProcess.name, Object.assign({}, currentResult, {
                 status: 'error',
                 anomalies: [],
                 error: error instanceof Error ? error.message : 'An unknown error occurred.',
-              });
+              }));
             }
             return newResults;
           });
         } finally {
-          // IMPORTANT: Process next file by updating state.
-          // 1. Remove the completed file from the queue.
           setFilesToAnalyze(prev => prev.slice(1));
-          // 2. Release the processing lock.
-          // This will cause the useEffect to run again and pick up the next file if the queue is not empty.
           setCurrentlyProcessing(null);
         }
       };
@@ -112,24 +117,22 @@ const App: React.FC = () => {
   }, [filesToAnalyze, currentlyProcessing]);
 
   const sortedResults = Array.from(analysisResults.values()).reverse();
-  
-  // The global 'analyzing' state for the FileUpload component.
-  // It should be true if there are any files waiting or being processed.
-  const isAnalyzing = filesToAnalyze.length > 0 || !!currentlyProcessing;
+  const isBusy = filesToAnalyze.length > 0 || !!currentlyProcessing;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
       <Header />
       <main className="container mx-auto p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
-          <FileUpload onFilesSelected={handleFilesSelected} isAnalyzing={isAnalyzing} />
+          <YouTubeUrlInput onUrlSubmit={handleYouTubeUrlSubmit} isProcessing={isBusy} />
+          <FileUpload onFilesSelected={handleFilesSelected} isAnalyzing={isBusy} />
 
           {sortedResults.length > 0 ? (
             <div className="mt-8 space-y-6">
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 border-b pb-2 border-gray-200 dark:border-gray-700">
                 Analysis Reports
               </h2>
-              {sortedResults.map((result) => (
+              {sortedResults.map((result: AnalysisResult) => (
                 <AnalysisReport key={result.fileName} result={result} />
               ))}
             </div>

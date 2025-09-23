@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { type Anomaly } from '../types';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_KEY = process.env.API_KEY;
 
 if (!API_KEY) {
   throw new Error("API_KEY environment variable not set.");
@@ -21,6 +21,13 @@ const analysisSchema = {
       description: {
         type: Type.STRING,
         description: "A brief, clear description of the detected anomalous behavior."
+      },
+      boundingBox: {
+        type: Type.ARRAY,
+        description: "An array of four numbers representing the bounding box [x_min, y_min, x_max, y_max] of the main subject of the anomaly, normalized to [0, 1]. Only include if a specific area can be clearly identified. The box should be as tight as possible around the subject.",
+        items: {
+          type: Type.NUMBER,
+        }
       }
     },
     required: ["timestamp", "description"]
@@ -155,6 +162,7 @@ export async function analyzeVideoFile(videoFile: File): Promise<Anomaly[]> {
       If no such anomalies are detected, return an empty array.
       The output must be a JSON array of objects, where each object has a "timestamp" and a "description".
       The timestamp for each anomaly MUST be one of the provided timestamps and must correspond to the frame where the event is most visible.
+      For each detected anomaly, if a specific person or area of interaction can be clearly identified, provide a "boundingBox" property. This should be an array of four normalized coordinates [x_min, y_min, x_max, y_max] that tightly frames the subject of the anomaly (e.g., the person performing the action and the child involved). The coordinates must be floating-point numbers between 0.0 and 1.0. If a bounding box is not applicable or cannot be determined, omit the property.
     `;
 
     const contents = {
